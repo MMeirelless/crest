@@ -22,6 +22,7 @@ class CustomRest(StreamingCommand):
     headers = Option(require=False)
     timeout = Option(require=False, default=10, validate=validators.Integer())
     debug = Option(require=False, default=False, validate=validators.Boolean())
+    verify = True   # Enforced True
 
     warnings = []
     errors = []
@@ -35,6 +36,7 @@ class CustomRest(StreamingCommand):
 
             # If URL contains 'localhost', add Splunk token if possible
             if "localhost" in self.url.lower() and isinstance(headers, dict):
+                self.verify = False        
                 headers["Authorization"] = f"Splunk {self._metadata.searchinfo.session_key}"
 
             if self.debug:
@@ -42,6 +44,8 @@ class CustomRest(StreamingCommand):
                 record["data"] = data
                 record["method"] = method
                 record["headers"] = headers
+                record["verify"] = self.verify
+                
             else:
                 response = self.rest(self.url, data, headers, method)
 
@@ -60,23 +64,11 @@ class CustomRest(StreamingCommand):
             yield record
 
     def rest(self, url, data, headers, method):
-        """
-        Enforces HTTPS for external URLs. Allows both https://localhost and http://localhost
-        (the latter with a warning). Always uses verify=True for SSL verification.
-        """
-        # Allow localhost over HTTP but log a warning
-        if "localhost" in url.lower():
-            # If using http://localhost, warn. If https://localhost, proceed without warning.
-            if url.lower().startswith("http://localhost"):
-                self.warnings.append("Warning: Using http://localhost. While this may be acceptable for local connections, it is not encrypted.")
-            elif not url.lower().startswith("https://localhost"):
-                # Any other scheme for localhost triggers a generic warning
-                self.warnings.append(f"Localhost detected but the scheme is neither HTTP nor HTTPS: {url}")
-        else:
-            # Enforce HTTPS for any external URL
-            if not url.lower().startswith("https://"):
-                self.errors.append(f"External URL must use HTTPS. Insecure URL found: {url}")
-                return None
+        
+        # Enforce HTTPS for any external URL
+        if not url.lower().startswith("https://") and not "localhost" in self.url.lower():
+            self.errors.append(f"External URL must use HTTPS. Insecure URL found: {url}")
+            return None
 
         try:
             if method == "post":
@@ -85,7 +77,7 @@ class CustomRest(StreamingCommand):
                     headers=headers,
                     data=data,
                     timeout=self.timeout,
-                    verify=True,  # Enforced True
+                    verify=self.verify,
                 )
             elif method == "get":
                 return requests.get(
@@ -93,7 +85,7 @@ class CustomRest(StreamingCommand):
                     headers=headers,
                     data=data,
                     timeout=self.timeout,
-                    verify=True,  # Enforced True
+                    verify=self.verify,
                 )
             elif method == "delete":
                 return requests.delete(
@@ -101,7 +93,7 @@ class CustomRest(StreamingCommand):
                     headers=headers,
                     data=data,
                     timeout=self.timeout,
-                    verify=True,  # Enforced True
+                    verify=self.verify,
                 )
             else:
                 self.errors.append(
