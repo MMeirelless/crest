@@ -39,7 +39,7 @@ To install the **Custom REST Command** app and use the `crest` command:
 
 ## Syntax
 
-`| crest url=<string> method=<string> [data=<string>] [headers=<string>] [debug=<boolean>] [verify=<boolean>] [timeout=<int>]`
+`| crest url=<string> method=<string> [data=<string>] [headers=<string>] [debug=<boolean>] [timeout=<int>]`
 
 - **Note**: Square brackets `[]` denote optional parameters.
 
@@ -52,7 +52,6 @@ To install the **Custom REST Command** app and use the `crest` command:
 - **`data`** (optional): The payload to send with a `POST` request. Should be a JSON-formatted string.
 - **`headers`** (optional): Custom headers to include in the request. Should be a JSON-formatted string.
 - **`debug`** (optional): Set to `true` to enable debug mode, which displays request details without executing the request.
-- **`verify`** (optional): Set to `false` to disable SSL verification in your REST calls. Be careful with this option!
 - **`timeout`** (optional): Default is 10s, but you can change it according to your needs..
 
 ---
@@ -97,7 +96,7 @@ Use the `debug` parameter to display the request details without executing the a
 
 ## Notes
 
-- **SSL Verification**: SSL verification is enabled by default. Ensure that your Splunk instance can verify the SSL certificates of the endpoints you are accessing. If you need to disable SSL verification (not recommended due to security risks), you can include the option `verify="false"` in the command.
+- **SSL Verification**: SSL verification is enabled. Ensure that your Splunk instance can verify the SSL certificates of the endpoints you are accessing.
 - **Session Authorization**: When making requests to `localhost`, the command automatically includes the Splunk session key in the `Authorization` header.  This uses your user to authenticate the internal request.
 - **Timeouts**: The command uses a default timeout of 10 seconds for HTTP requests. You can change this using the timeout option if necessary.
 - **Error Handling**: The command includes error handling for network problems and invalid parameters. 
