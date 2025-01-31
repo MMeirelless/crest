@@ -1,0 +1,6 @@
+[commands/crest]
+access = read : [ * ], write : [ ]
+export = system
+
+[searchbnf]
+export = system
