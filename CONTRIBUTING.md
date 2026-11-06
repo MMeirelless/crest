@@ -23,14 +23,6 @@ To develop and test your changes, you need a local Splunk Enterprise instance.
 
 ## 3. Testing Your Changes
 
-Run the automated regression tests with Python 3 and the `requests` runtime dependency installed:
-
-```sh
-python -m unittest discover -s tests -v
-```
-
-These tests use the bundled Splunk SDK and a local HTTP server; they do not require a running Splunk instance.
-
 Because `crest` interacts with external systems, testing is crucial. Please ensure your changes do not break existing functionality for Generating or Streaming modes.
 
 * **Use Debug Mode:** When building new payload formatting or header parsing, use the built-in `debug=true` parameter. This ensures you are verifying the exact output of your code without accidentally spamming external APIs.
