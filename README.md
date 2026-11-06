@@ -2,7 +2,7 @@
 
 The `crest` command is a powerful and flexible custom Splunk search command that allows you to send HTTP requests directly from your Splunk searches.
 
-It supports `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` methods, allowing you to interact with RESTful APIs and web services. The command can run as a *generating* command (to start a search) or a *streaming* command (to act on existing results), making it a complete tool for API integration.
+It supports `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and `QUERY` methods, allowing you to interact with RESTful APIs and web services. The command can run as a *generating* command (to start a search) or a *streaming* command (to act on existing results), making it a complete tool for API integration.
 
 This command is shipped with the **Custom REST Command** app.
 
@@ -21,6 +21,7 @@ This command is shipped with the **Custom REST Command** app.
   - [Example 4: CSV Parsing (Generating)](#example-4-csv-parsing-generating)
   - [Example 5: Token Authentication](#example-5-token-authentication)
   - [Example 6: Streaming Mode with Token Substitution](#example-6-streaming-mode-with-token-substitution)
+  - [Example 7: QUERY Requests (Generating and Streaming)](#example-7-query-requests-generating-and-streaming)
 - [Debug Mode](#debug-mode)
 - [Notes](#notes)
 - [Support](#support)
@@ -85,8 +86,8 @@ In streaming mode, you can use `$field_name$` syntax in the `url`, `data`, and `
 -   **`url`** (required): The endpoint URL to send the HTTP request to.
     -   In Streaming Mode, supports token substitution (e.g., `url=".../users/$id$"`).
 -   **`method`** (required): The HTTP method to use.
-    -   Supported: `get`, `post`, `put`, `patch`, `delete`.
--   **`data`** (optional): The payload (body) to send with `POST`, `PUT`, or `PATCH` requests. This should be a string, typically formatted as JSON.
+    -   Supported (case-insensitive): `get`, `post`, `put`, `patch`, `delete`, `query`.
+-   **`data`** (optional): The payload (body) to send with `POST`, `PUT`, `PATCH`, or `QUERY` requests. This should be a string, typically formatted as JSON.
     -   In Streaming Mode, supports token substitution (e.g., `data="{'user': '$user_name$'}"`).
 -   **`headers`** (optional): Custom headers to include in the request. Should be a JSON-formatted string (e.g., `headers="{'X-API-Key': '123'}"`).
     -   In Streaming Mode, supports token substitution.
@@ -186,6 +187,28 @@ Creates three new tickets in an external system by piping events into `crest`. T
 3.  **POSTs** to `/v1/tickets` with `{'summary': 'Ticket 2', 'requester': 'user2@example.com', ...}`
 4.  Waits 1 second.
 5.  ...and so on. The search results will show 3 events, each with the `status_code` of its respective API call.
+
+---
+
+### Example 7: QUERY Requests (Generating and Streaming)
+
+[`QUERY`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods/QUERY) performs a safe, idempotent query with the query content in the request body rather than the URL. The endpoint must support `QUERY`. Supply the query using `data` and explicitly set `Content-Type` in `headers` to a query format accepted by that endpoint (JSON in these examples).
+
+Generating mode sends one request:
+
+```spl
+| crest url="https://api.example.com/contacts" method="query" data='{"email":"*@example.com"}' headers='{"Content-Type":"application/json"}' parse_response=true
+```
+
+Streaming mode sends one request per event, substituting fields in the URL, body, and headers as usual:
+
+```spl
+| makeresults
+| eval email="alice@example.com"
+| crest url="https://api.example.com/contacts" method="query" data='{"email":"$email$"}' headers='{"Content-Type":"application/json"}' parse_response=true
+```
+
+Both examples parse the JSON response into events. Omit `parse_response=true` to return `status_code` and `status_message` instead.
 
 ---
 

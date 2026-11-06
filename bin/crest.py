@@ -3,7 +3,7 @@
 """
 Splunk Generating/Streaming Command: CustomRest (crest)
 
-This command allows Splunk users to execute REST requests (GET, POST, PUT, PATCH, DELETE)
+This command allows Splunk users to execute REST requests (GET, POST, PUT, PATCH, DELETE, QUERY)
 directly from an SPL search.
 
 It operates in two modes:
@@ -12,7 +12,7 @@ It operates in two modes:
    for EACH incoming event, allowing for token substitution ($field$).
 
 Key Features:
-- Supports GET, POST, PUT, PATCH, DELETE.
+- Supports GET, POST, PUT, PATCH, DELETE, QUERY.
 - Token substitution in streaming mode (e.g., url=".../$field$").
 - Automatic response parsing for JSON, CSV, TSV, XML (with parse_response=true).
 - Nested JSON parsing (with json_path="results.items").
@@ -50,8 +50,8 @@ class CustomRest(StreamingCommand):
 
     # --- Request Parameters ---
     url = Option(require=True, doc="The URL of the API endpoint.")
-    method = Option(require=True, doc="The HTTP method (get, post, put, patch, delete).")
-    data = Option(require=False, doc="The request body (e.g., JSON as a string) for POST/PUT/PATCH.")
+    method = Option(require=True, doc="The HTTP method (get, post, put, patch, delete, query).")
+    data = Option(require=False, doc="The request body (e.g., JSON as a string) for POST/PUT/PATCH/QUERY.")
     headers = Option(require=False, doc="HTTP headers (as a JSON string) to be sent.")
     
     # --- Authentication Parameters ---
@@ -411,9 +411,13 @@ class CustomRest(StreamingCommand):
                 return requests.delete(
                     url, headers=headers, data=data, timeout=self.timeout, verify=verify_ssl
                 )
+            elif method == "query":
+                return requests.request(
+                    "QUERY", url, headers=headers, data=data, timeout=self.timeout, verify=verify_ssl
+                )
             else:
                 self.errors.append(
-                    "Method not recognized. Use: get, post, put, patch, delete."
+                    "Method not recognized. Use: get, post, put, patch, delete, query."
                 )
                 return None
         
